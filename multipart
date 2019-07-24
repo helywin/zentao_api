@@ -1,0 +1,60 @@
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="product"
+
+1
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="name"
+
+v2
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="builder"
+
+admin
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="date"
+
+2019-07-24
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="scmPath"
+
+source
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="filePath"
+
+download
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="labels[]"
+
+dns.bat
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="files[]"; filename="dns.bat"
+Content-Type: application/octet-stream
+
+ipconfig /flushdns
+pause
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="labels[]"
+
+Untitled-1.txt
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="files[]"; filename="Untitled-1.txt"
+Content-Type: text/plain
+
+Oh???¨¨?????¨¨???¡迿??~QQ??¡迿?170776629
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="labels[]"
+
+
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="files[]"
+
+
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="desc"
+
+desc
+------WebKitFormBoundarycme3r6RqAizMDt6Y
+Content-Disposition: form-data; name="uid"
+
+5d384077831fd
+------WebKitFormBoundarycme3r6RqAizMDt6Y--
