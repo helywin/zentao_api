@@ -1,187 +1,224 @@
+# encoding:utf-8
 import requests
-import requests.cookies
+import warnings
 import json
-from requests_toolbelt.multipart.encoder import MultipartEncoder
+import os
+import time
+import mimetypes
+from requests_toolbelt import MultipartEncoder
+
+
+# import hashlib
 
 
 class ZenTao:
+    """
+    控制禅道的类
+    """
     host = str
-    cookies = requests.cookies.RequestsCookieJar()
     session_name = str
     session_id = str
     session = requests.Session
+    boundary = str
+    multipart_header = {}
 
     def __init__(self, host: str):
-        """
-        初始化类
-        :param host: 服务器地址
-        """
         self.host = host
         self.session = requests.Session()
+        self.boundary = '------WebKitFormBoundaryAmOiBfmEYFBzUOnO'
+        self.multipart_header = {'Content-Type': 'multipart/form-data; boundary={0}'.format(self.boundary),
+                                 'charset': 'UTF-8'}
 
     def login(self, username: str, password: str):
         """
-        登录
-        :param username: 用户名
-        :param password: 密码
+        登录禅道
         :return: 是否成功
         """
         respond = self.session.get(self.host + '/zentao/api-getsessionid.json')
+        # print(req_get_session.content)
         if respond.status_code != 200:
+            warnings.warn('http error:' + respond.status_code)
             return False
-        data = respond.json()
-        # print(data)
-        if data['status'] != 'success':
+        content = respond.json()
+        # print(content)
+        if content['status'] != 'success':
+            warnings.warn('获取链接session失败')
             return False
-
-        data = json.loads(data['data'])
-
-        self.cookies = respond.cookies
+        # md5_value = hashlib.md5(content['data'])
+        # if md5_value != content['md5']:
+        #     warnings.warn("数据md5校验错误")
+        #     return False
+        data = json.loads(content['data'])
         self.session_name = data['sessionName']
         self.session_id = data['sessionID']
-
-        params = {
-            'account': username,
-            'password': password
-        }
-        # self.session.cookies =
-        respond = self.session.get(
-            self.host + '/zentao/user-login.json?{0}={1}'.format(self.session_name, self.session_id),
-            params=params, cookies=self.cookies)
-        # print(req.content)
+        # print(self.session_name + '=' + self.session_id)
+        params = {'account': username, 'password': password}
+        # headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        respond = self.session.post(self.host + '/zentao/user-login.json?{0}={1}'
+                                    .format(self.session_name, self.session_id),
+                                    params=params)
         if respond.status_code != 200:
+            warnings.warn('http error:' + respond.status_code)
             return False
-        data = respond.json()
-        if data['status'] != 'success':
+        # print(respond.content)
+        content = respond.json()
+        if content['status'] != 'success':
+            warnings.warn('登录失败')
             return False
         return True
 
     def logout(self):
-        """
-        退出
+        '''
+        退出禅道
         :return: 是否成功
-        """
-        respond = self.session.get(
-            self.host + '/zentao/user-logout.json?{0}={1}'.format(self.session_name, self.session_id))
+        '''
+        respond = self.session.get(self.host + '/zentao/user-logout.json')
         if respond.status_code != 200:
+            warnings.warn('http error:' + respond.status_code)
             return False
-        data = respond.json()
-        # print(data)
-        if data['status'] != 'success':
+        # print(respond.content)
+        content = respond.json()
+        if content['status'] != 'success':
+            warnings.warn('登录失败')
             return False
+        return True
+
+    def get_index(self):
+        """
+        获取首页
+        :return:
+        """
+        respond = self.session.get(self.host + '/zentao/branch-sort.json?{0}={1}'
+                                   .format(self.session_name, self.session_id))
+        if respond.status_code != 200:
+            warnings.warn('http error:' + respond.status_code)
+            return False
+        print(respond.content)
+        return True
+
+    def get_build(self, id: int):
+        """
+        获取版本
+        :return:
+        """
+        data = {'buildID': id}
+        req = self.session.get(
+            self.host + '/zentao/build-view-{0}.json?{1}={2}'.format(str(id), self.session_name, self.session_id),
+            params=data)
+        if req.status_code != 200:
+            warnings.warn('http error:' + req.status_code)
+            return False
+        # content = req.json()
+        # print(req.headers)
+        # data = json.loads(content['data'], 'utf-8')
+        # print(data['title'])
         return True
 
     def create_build(self, product: int, project: int, name: str, builder: str, source: str, download: str,
-                     attaches: [str], describe: str, uid: str):
-        params = {"projectID": project}
-        # respond = self.session.post(
-        #     self.host + '/zentao/build-create-{0}.json?{1}={2}'.format(str(project), self.session_name,
-        #                                                                self.session_id),
-        #     params=params, cookies=self.cookies)
-        respond = requests.get(
-            self.host + '/zentao/build-view-1.json', cookies=self.cookies)
+                     file: str, desc: str):
+        """
+        获取版本
+        :return:
+        """
+        data = {'projectID': project}
+        respond = self.session.get(
+            self.host + '/zentao/build-create-{0}.json?{1}={2}'
+            .format(str(project), self.session_name, self.session_id),
+            params=data)
         if respond.status_code != 200:
+            warnings.warn('http error:' + respond.status_code)
             return False
         print(respond.content)
-        # data = respond.json()
-        # print(data)
-        # if data['status'] != 'success':
+        # content = req.json()
+        # data = jsoncontent['data']
+        # print(req.content.decode('unicode_escape'))
+
+        # data = ''
+        # data += '{0}\r\nContent-Disposition: form-data; name="{1}"\r\n\r\n{2}'.format(self.boundary, 'product', product)
+
+        # respond = self.session.post(
+        #     self.host + '/zentao/build-create-{0}.json?{1}={2}'
+        #     .format(str(project), self.session_name, self.session_id),
+        #     headers=self.multipart_header, data=data)
+        # if respond.status_code != 200:
+        #     warnings.warn('http error:' + respond.status_code)
         #     return False
+        # print(respond.content)
+        file_bin = str
+        mime_type = str
+        try:
+            fd = open(file, 'rb')
+            # mime_type = mimetypes.guess_type(file)[0]
+            # if mime_type is None:
+            mime_type = 'application/octet-stream'
+            print(mime_type)
+            file_bin = fd.read()
+            fd.close()
+        except IOError as err:
+            warnings.warn('文件打开失败: ' + file)
+        fields = {
+            'product': str(product),
+            'name': name,
+            'builder': builder,
+            'date': time.strftime('%Y-%m-%d', time.localtime(time.time())),
+            'scmPath': source,
+            'filePath': download,
+            'files': (os.path.basename(file), file_bin, 'application/octet-stream'),
+            'desc': desc
+        }
+        # print('os.path.basename(file): ' + os.path.basename(file))
+        # os.path.basename(file)
 
-        # data = MultipartEncoder(fields={
-        #     'product': product,
-        #     'name': name,
-        #     'builder': builder,
-        #     'date': '2019-1-1',
-        #     'scmPath': source,
-        #     'filePath': download,
-        #     'labels[]': 'hello.c',
-        #
-        #     'files[]': [
-        #
-        #     ],
-        #     'desc': describe,
-        # 'uid': uid
-        # })
-        text_data = '''
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="product"
+        # for i in range(0, len(files_data)):
+        #     fields['file{0}'.format(i)] = files_data[i]
 
-1
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="name"
+        # print(file_bin)
+        data = MultipartEncoder(
+            fields=fields
+        )
 
-v2
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="builder"
-
-admin
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="date"
-
-2019-07-24
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="scmPath"
-
-source
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="filePath"
-
-download
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="labels[]"
-
-dns.bat
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="files[]"; filename="dns.bat"
-Content-Type: application/octet-stream
-
-ipconfig /flushdns
-pause
-Content-Disposition: form-data; name="labels[]"
-
-
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="files[]"
-
-
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="desc"
-
-desc
-------WebKitFormBoundarycme3r6RqAizMDt6Y
-Content-Disposition: form-data; name="uid"
-
-5d384077831fd
-------WebKitFormBoundarycme3r6RqAizMDt6Y--
-        '''
-        header = 'multipart/form-data; boundary=----WebKitFormBoundarycme3r6RqAizMDt6Y'
-        # decode_data = data.to_string()
+        # print(data)
 
         respond = self.session.post(
-            self.host + '/zentao/build-create-{0}.json?{1}={2}'.format(str(project), self.session_name,
-                                                                       self.session_id),
-            data=text_data, headers={
-                'Content-Type': 'multipart/form-data;boundary=----WebKitFormBoundarycme3r6RqAizMDt6Y'})
+            self.host + '/zentao/build-create-{0}.json?{1}={2}'
+            .format(str(project), self.session_name, self.session_id),
+            headers={'Content-Type': data.content_type, 'charset': 'UTF-8'}, data=data)
         if respond.status_code != 200:
+            warnings.warn('http error:' + respond.status_code)
+            return False
+        content = respond.json()
+        if content['result'] != 'success':
+            warnings.warn('创建失败')
             return False
         print(respond.content)
+
         return True
 
-    @staticmethod
-    def multipart_header(self, uuid: str):
-        return {'Content-Type': 'multipart/form-data; boundary={0}'.format(uuid), 'charset': 'UTF-8'}
-
-    @staticmethod
-    def multipart_data(self, uuid: str, content: str):
-        return ''
+    def delete_build(self, id: int):
+        """
+        删除版本
+        :return:
+        """
+        data = {'buildID': id, 'confirm': 'yes'}
+        respond = requests.get(
+            self.host + '/zentao/build-delete-{0}-yes.json?{1}={2}'.format(str(id), self.session_name, self.session_id),
+            params=data)
+        if respond.status_code != 200:
+            warnings.warn('http error:' + respond.status_code)
+            return False
+        # content = req.json()
+        print(respond.content)
+        # data = json.loads(content['data'], 'utf-8')
+        # print(data['title'])
+        return True
 
 
 if __name__ == '__main__':
     z = ZenTao('http://127.0.0.1:80')
-    if z.login('admin', 'jiangwq='):
-        print("登录成功")
-    if z.create_build(1, 1, 'v3', 'admin', 'github', 'ftp', [], 'desc', '5d384077831fd'):
-        print("创建成功")
+    if z.login('admin', '123456'):
+        print('登录成功')
+    if z.create_build(1, 1, 'test', 'admin', 'github.com', 'ftp://192.168.1.1',
+                      '../master.zip', 'describe'):
+        print("创建版本")
     if z.logout():
-        print("注销成功")
+        print('注销成功')
