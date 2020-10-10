@@ -8,9 +8,6 @@ import mimetypes
 from requests_toolbelt import MultipartEncoder
 
 
-# import hashlib
-
-
 class ZenTao:
     """
     控制禅道的类
@@ -37,7 +34,7 @@ class ZenTao:
         respond = self.session.get(self.host + '/zentao/api-getsessionid.json')
         # print(req_get_session.content)
         if respond.status_code != 200:
-            warnings.warn('http error:' + respond.status_code)
+            warnings.warn('http error: %d' % respond.status_code)
             return False
         content = respond.json()
         # print(content)
@@ -58,7 +55,7 @@ class ZenTao:
                                     .format(self.session_name, self.session_id),
                                     params=params)
         if respond.status_code != 200:
-            warnings.warn('http error:' + respond.status_code)
+            warnings.warn('http error: %d' % respond.status_code)
             return False
         # print(respond.content)
         content = respond.json()
@@ -74,7 +71,7 @@ class ZenTao:
         '''
         respond = self.session.get(self.host + '/zentao/user-logout.json')
         if respond.status_code != 200:
-            warnings.warn('http error:' + respond.status_code)
+            warnings.warn('http error: %d' % respond.status_code)
             return False
         # print(respond.content)
         content = respond.json()
@@ -91,7 +88,7 @@ class ZenTao:
         respond = self.session.get(self.host + '/zentao/branch-sort.json?{0}={1}'
                                    .format(self.session_name, self.session_id))
         if respond.status_code != 200:
-            warnings.warn('http error:' + respond.status_code)
+            warnings.warn('http error: %d' % respond.status_code)
             return False
         print(respond.content)
         return True
@@ -107,7 +104,7 @@ class ZenTao:
                 str(id), self.session_name, self.session_id),
             params=data)
         if req.status_code != 200:
-            warnings.warn('http error:' + req.status_code)
+            warnings.warn('http error: %d' % req.status_code)
             return False
         # content = req.json()
         # print(req.headers)
@@ -127,7 +124,7 @@ class ZenTao:
             .format(str(project), self.session_name, self.session_id),
             params=data)
         if respond.status_code != 200:
-            warnings.warn('http error:' + respond.status_code)
+            warnings.warn('http error: %d' % respond.status_code)
             return False
         print(respond.content)
         fields = {
@@ -141,7 +138,7 @@ class ZenTao:
         }
         file_index = 0
         for file_name in files:
-            file_bin: str
+            file_bin: bytes
             mime_type: str
             try:
                 fd = open(file_name, 'rb')
@@ -152,7 +149,7 @@ class ZenTao:
                 file_bin = fd.read()
                 fd.close()
             except IOError as err:
-                warnings.warn('failed to open file: ' + file + ' with' + err.__str__())
+                warnings.warn('failed to open file: ' + file_name + ' with' + err.__str__())
                 continue
             fields["files[" + str(file_index) + "]"] = (
                 os.path.basename(file_name), file_bin, mime_type)
@@ -168,7 +165,7 @@ class ZenTao:
             .format(str(project), self.session_name, self.session_id),
             headers={'Content-Type': data.content_type, 'charset': 'UTF-8'}, data=data)
         if respond.status_code != 200:
-            warnings.warn('http error:' + respond.status_code)
+            warnings.warn('http error: %d' % respond.status_code)
             return False
         content = respond.json()
         if content['result'] != 'success':
@@ -189,7 +186,7 @@ class ZenTao:
                 str(id), self.session_name, self.session_id),
             params=data)
         if respond.status_code != 200:
-            warnings.warn('http error:' + respond.status_code)
+            warnings.warn('http error: %d' % respond.status_code)
             return False
         # content = req.json()
         print(respond.content)
@@ -198,6 +195,7 @@ class ZenTao:
         return True
 
 
+# example code
 if __name__ == '__main__':
     z = ZenTao('http://127.0.0.1:80')
     if z.login('admin', '123456'):
