@@ -103,7 +103,8 @@ class ZenTao:
         """
         data = {'buildID': id}
         req = self.session.get(
-            self.host + '/zentao/build-view-{0}.json?{1}={2}'.format(str(id), self.session_name, self.session_id),
+            self.host + '/zentao/build-view-{0}.json?{1}={2}'.format(
+                str(id), self.session_name, self.session_id),
             params=data)
         if req.status_code != 200:
             warnings.warn('http error:' + req.status_code)
@@ -115,7 +116,7 @@ class ZenTao:
         return True
 
     def create_build(self, product: int, project: int, name: str, builder: str, source: str, download: str,
-                     file: str, desc: str):
+                     files: list, desc: str):
         """
         获取版本
         :return:
@@ -129,33 +130,6 @@ class ZenTao:
             warnings.warn('http error:' + respond.status_code)
             return False
         print(respond.content)
-        # content = req.json()
-        # data = jsoncontent['data']
-        # print(req.content.decode('unicode_escape'))
-
-        # data = ''
-        # data += '{0}\r\nContent-Disposition: form-data; name="{1}"\r\n\r\n{2}'.format(self.boundary, 'product', product)
-
-        # respond = self.session.post(
-        #     self.host + '/zentao/build-create-{0}.json?{1}={2}'
-        #     .format(str(project), self.session_name, self.session_id),
-        #     headers=self.multipart_header, data=data)
-        # if respond.status_code != 200:
-        #     warnings.warn('http error:' + respond.status_code)
-        #     return False
-        # print(respond.content)
-        file_bin = str
-        mime_type = str
-        try:
-            fd = open(file, 'rb')
-            # mime_type = mimetypes.guess_type(file)[0]
-            # if mime_type is None:
-            mime_type = 'application/octet-stream'
-            print(mime_type)
-            file_bin = fd.read()
-            fd.close()
-        except IOError as err:
-            warnings.warn('文件打开失败: ' + file)
         fields = {
             'product': str(product),
             'name': name,
@@ -163,16 +137,26 @@ class ZenTao:
             'date': time.strftime('%Y-%m-%d', time.localtime(time.time())),
             'scmPath': source,
             'filePath': download,
-            'files': (os.path.basename(file), file_bin, 'application/octet-stream'),
             'desc': desc
         }
-        # print('os.path.basename(file): ' + os.path.basename(file))
-        # os.path.basename(file)
-
-        # for i in range(0, len(files_data)):
-        #     fields['file{0}'.format(i)] = files_data[i]
-
-        # print(file_bin)
+        file_index = 0
+        for file_name in files:
+            file_bin: str
+            mime_type: str
+            try:
+                fd = open(file_name, 'rb')
+                # mime_type = mimetypes.guess_type(file)[0]
+                # if mime_type is None:
+                mime_type = 'application/octet-stream'
+                print(mime_type)
+                file_bin = fd.read()
+                fd.close()
+            except IOError as err:
+                warnings.warn('failed to open file: ' + file + ' with' + err.__str__())
+                continue
+            fields["files[" + str(file_index) + "]"] = (
+                os.path.basename(file_name), file_bin, mime_type)
+            file_index += 1
         data = MultipartEncoder(
             fields=fields
         )
@@ -201,7 +185,8 @@ class ZenTao:
         """
         data = {'buildID': id, 'confirm': 'yes'}
         respond = requests.get(
-            self.host + '/zentao/build-delete-{0}-yes.json?{1}={2}'.format(str(id), self.session_name, self.session_id),
+            self.host + '/zentao/build-delete-{0}-yes.json?{1}={2}'.format(
+                str(id), self.session_name, self.session_id),
             params=data)
         if respond.status_code != 200:
             warnings.warn('http error:' + respond.status_code)
@@ -218,7 +203,7 @@ if __name__ == '__main__':
     if z.login('admin', '123456'):
         print('登录成功')
     if z.create_build(1, 1, 'test', 'admin', 'github.com', 'ftp://192.168.1.1',
-                      '../master.zip', 'describe'):
+                      ['../a.zip', '../b.zip'], 'describe'):
         print("创建版本")
     if z.logout():
         print('注销成功')
