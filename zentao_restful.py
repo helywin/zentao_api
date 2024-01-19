@@ -55,21 +55,21 @@ def get_user_myself():
     response:
         名称 	        类型 	必填 	描述
         profile	        object	是	
-          ∟ id	        int	    是	用户编号
-          ∟ type	    string	是	类型(inside 内部用户 | outside 外部用户)
-          ∟ dept	    int	    是	所属部门
-          ∟ account	    string	是	用户名
-          ∟ realname	string	是	真实姓名
-          ∟ nickname	string	否	昵称
-          ∟ avatar	    string	否	头像
-          ∟ birthday	date	否	生日
-          ∟ gender	    string	否	性别(f 女性 | m 男性)
-          ∟ mobile	    string	否	手机号码
-          ∟ phone	    string	否	电话号码
-          ∟ weixin	    string	否	微信号码
-          ∟ address	    string	否	住址
-          ∟ join	    date	否	加入日期
-          ∟ admin	    boolean	是	是否管理员
+          - id	        int	    是	用户编号
+          - type	    string	是	类型(inside 内部用户 | outside 外部用户)
+          - dept	    int	    是	所属部门
+          - account	    string	是	用户名
+          - realname	string	是	真实姓名
+          - nickname	string	否	昵称
+          - avatar	    string	否	头像
+          - birthday	date	否	生日
+          - gender	    string	否	性别(f 女性 | m 男性)
+          - mobile	    string	否	手机号码
+          - phone	    string	否	电话号码
+          - weixin	    string	否	微信号码
+          - address	    string	否	住址
+          - join	    date	否	加入日期
+          - admin	    boolean	是	是否管理员
     """
     global TOKEN
     if TOKEN is None:
@@ -155,17 +155,17 @@ def get_project_builds(project_id: int):
         名称 	        类型 	必填 	描述
         total	        int	    是	版本总数
         builds	        array	是	版本列表
-          ∟ id	        int	    是	版本ID
-          ∟ project	    int	    是	所属项目
-          ∟ product	    int	    是	所属产品
-          ∟ branch	    int	    是	所属分支
-          ∟ execution	int	    是	所属执行
-          ∟ name	    string	是	版本名称
-          ∟ scmPath	    string	否	源代码地址
-          ∟ filePath	string	否	下载地址
-          ∟ date	    date	是	打包日期
-          ∟ builder	    user	是	构建者
-          ∟ desc	    string	是	版本描述
+          - id	        int	    是	版本ID
+          - project	    int	    是	所属项目
+          - product	    int	    是	所属产品
+          - branch	    int	    是	所属分支
+          - execution	int	    是	所属执行
+          - name	    string	是	版本名称
+          - scmPath	    string	否	源代码地址
+          - filePath	string	否	下载地址
+          - date	    date	是	打包日期
+          - builder	    user	是	构建者
+          - desc	    string	是	版本描述
     """
     global TOKEN
     if TOKEN is None:
@@ -191,17 +191,17 @@ def get_execution_builds(execution_id: int):
         名称 	        类型 	必填 	描述
         total	        int	    是	版本总数
         builds	        array	是	版本列表
-          ∟ id	        int	    是	版本ID
-          ∟ project	    int	    是	所属项目
-          ∟ product	    int	    是	所属产品
-          ∟ branch	    int	    是	所属分支
-          ∟ execution	int	    是	所属执行
-          ∟ name	    string	是	版本名称
-          ∟ scmPath	    string	否	源代码地址
-          ∟ filePath	string	否	下载地址
-          ∟ date	    date	是	打包日期
-          ∟ builder	    user	是	构建者
-          ∟ desc	    string	是	版本描述
+          - id	        int	    是	版本ID
+          - project	    int	    是	所属项目
+          - product	    int	    是	所属产品
+          - branch	    int	    是	所属分支
+          - execution	int	    是	所属执行
+          - name	    string	是	版本名称
+          - scmPath	    string	否	源代码地址
+          - filePath	string	否	下载地址
+          - date	    date	是	打包日期
+          - builder	    user	是	构建者
+          - desc	    string	是	版本描述
     """
     global TOKEN
     if TOKEN is None:
@@ -251,7 +251,8 @@ def get_build(build_id: int):
     print_response(response)
 
 
-def create_build(project_id: int):
+def create_build(project_id: int, product_id: int, name : str, builder : str, date : str, 
+                 filePath : str, desc : str):
     """
     create build
     api: /projects/{id}/builds
@@ -289,8 +290,8 @@ def create_build(project_id: int):
         return
 
     headers = {'Token': TOKEN}
-    data = {'name': 'build name', 'desc': 'build desc', 'begin': int(
-        time.time()), 'end': int(time.time()), 'status': 1}
+    data = {'execution': 0, 'product': product_id, 'branch': 0, 'name': name, 'builder': builder, 
+            'date': date, 'scmPath': '', 'filePath': filePath, 'desc': desc}
     url = f'http://{ZENTAO_HOST}/{API_URL}/projects/{project_id}/builds'
     if DEBUG:
         print('url:', url, 'request header:', headers, 'request body:', data)
@@ -299,7 +300,10 @@ def create_build(project_id: int):
 
 
 if __name__ == '__main__':
-    get_tokens()
-    get_user_myself()
-    get_user(4)
-    get_products()
+    # get_tokens()
+    # get_user_myself()
+    # get_user(4)
+    # get_products()
+    get_build(2)
+    create_build(3, 4, 'test', 'admin', time.strftime("%Y-%m-%d", time.localtime()), 
+                 'http://www.baidu.com', 'test')
